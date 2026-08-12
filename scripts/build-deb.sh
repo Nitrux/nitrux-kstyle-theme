@@ -9,59 +9,56 @@
 set -euo pipefail
 
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-cd "$SCRIPT_DIR"
 # -- Compile Source
 
-mkdir -p build
-cd build
+mkdir -p build && cd build
 
 HOST_MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
-PACKAGE_VERSION="${PACKAGE_VERSION:-6.80}"
-if [[ ! "$PACKAGE_VERSION" =~ ^[0-9][0-9A-Za-z.+:~-]*$ ]]; then
-    printf "Invalid Debian package version: %s\n" "$PACKAGE_VERSION" >&2
-    exit 1
-fi
 
 cmake \
 	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DENABLE_BSYMBOLICFUNCTIONS=OFF \
+	-DQUICK_COMPILER=ON \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DKDE_INSTALL_SYSCONFDIR=/etc \
-	-DKDE_INSTALL_LOCALSTATEDIR=/var \
+	-DCMAKE_INSTALL_SYSCONFDIR=/etc \
+	-DCMAKE_INSTALL_LOCALSTATEDIR=/var \
 	-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON \
 	-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
-	-DKDE_INSTALL_RUNSTATEDIR=/run "-GUnix Makefiles" \
+	-DCMAKE_INSTALL_RUNSTATEDIR=/run "-GUnix Makefiles" \
 	-DCMAKE_VERBOSE_MAKEFILE=ON \
-	-DWITH_DECORATIONS=OFF \
-	-DKDE_INSTALL_LIBDIR="/usr/lib/${HOST_MULTIARCH}" \
+	-DCMAKE_INSTALL_LIBDIR="/usr/lib/${HOST_MULTIARCH}" \
 	..
+
 make -j"$(nproc)"
 
+make install
 
-# -- Run checkinstall and Build Debian Package
 
->> description-pak printf "%s\n" \
-	'Nitrux Qt6/KF6 KStyle.' \
-	'' \
-	'A Qt6/KF6 widget style based on Lightly, customized for Nitrux.' \
-	''
+# -- Stage the install tree and build the Debian package.
 
-checkinstall -D -y \
-	--install=no \
-	--fstrans=yes \
-	--pkgname=nitrux-kstyle-theme \
-	--pkgversion="$PACKAGE_VERSION" \
-	--pkgarch="$(dpkg --print-architecture)" \
-	--pkgrelease="1" \
-	--pkglicense=GPL-2 \
-	--pkggroup=utils \
-	--pkgsource=nitrux-kstyle-theme \
-	--pakdir=. \
-	--maintainer=uri_herrera@nxos.org \
-	--provides=nitrux-kstyle-theme \
-	--requires="frameworkintegration6,libkf6configcore6,libkf6coreaddons6,libkf6guiaddons6,libkf6i18n6,libkf6iconthemes6,libkf6kcmutils6,libkf6windowsystem6,libkwaylandclient6,libkirigami6,libqt6core6t64,libqt6dbus6,libqt6gui6,libqt6widgets6" \
-	--nodoc \
-	--strip=no \
-	--stripso=yes \
-	--reset-uids=yes \
-	--deldesc=yes
+DESTDIR="$(mktemp -d "$PWD/pkg.XXXXXX")"
+trap 'rm -rf "$DESTDIR"' EXIT
+
+install -d "$DESTDIR/usr/lib/${HOST_MULTIARCH}/qt6/plugins/styles"
+DESTDIR="$DESTDIR" cmake --install . --config Release
+
+mkdir -p "$DESTDIR/DEBIAN"
+
+PKGNAME="nitrux-kstyle-theme"
+ARCHITECTURE="${TARGET_ARCH:-$(dpkg --print-architecture)}"
+
+cat > "$DESTDIR/DEBIAN/control" <<EOF
+Package: $PKGNAME
+Version: $PACKAGE_VERSION
+Section: utils
+Priority: optional
+Architecture: $ARCHITECTURE
+Maintainer: uri_herrera@nxos.org
+Provides: nitrux-kstyle-theme
+Depends: frameworkintegration6, libkf6configcore6, libkf6coreaddons6, libkf6guiaddons6, libkf6i18n6, libkf6iconthemes6, libkf6kcmutils6, libkf6windowsystem6, libkwaylandclient6, libkirigami6, libqt6core6t64, libqt6dbus6, libqt6gui6, libqt6widgets6
+Description: Nitrux Qt6/KF6 KStyle.
+ A Qt6/KF6 widget style based on Lightly, customized for Nitrux.
+EOF
+
+PACKAGE_FILE="$PWD/${PKGNAME}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
+dpkg-deb --build "$DESTDIR" "$PACKAGE_FILE"

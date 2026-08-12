@@ -23,7 +23,6 @@ fi
 "${APT_COMMAND[@]}" update -q
 "${APT_COMMAND[@]}" install -y --no-install-recommends \
     build-essential \
-    checkinstall \
     cmake \
     extra-cmake-modules \
     libkf6coreaddons-dev \
