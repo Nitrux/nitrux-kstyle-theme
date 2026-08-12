@@ -36,6 +36,7 @@
 #include <KDecoration2/DecorationButtonGroup>
 #include <KDecoration2/DecorationSettings>
 #include <KDecoration2/DecorationShadow>
+#include <memory>
 
 #include <KColorUtils>
 #include <KConfigGroup>
@@ -141,7 +142,7 @@ static int g_sDecoCount = 0;
 static int g_shadowSizeEnum = InternalSettings::ShadowLarge;
 static int g_shadowStrength = 255;
 static QColor g_shadowColor = Qt::black;
-static QSharedPointer<KDecoration2::DecorationShadow> g_sShadow;
+static std::shared_ptr<KDecoration2::DecorationShadow> g_sShadow;
 
 //________________________________________________________________
 Decoration::Decoration(QObject *parent, const QVariantList &args)
@@ -157,7 +158,7 @@ Decoration::~Decoration()
     g_sDecoCount--;
     if (g_sDecoCount == 0) {
         // last deco destroyed, clean up shadow
-        g_sShadow.clear();
+        g_sShadow.reset();
     }
 
     deleteSizeGrip();
@@ -227,7 +228,7 @@ void Decoration::setButtonHovered(bool value)
 void Decoration::hoverMoveEvent(QHoverEvent *event)
 {
     if (objectName() != "applet-window-buttons") {
-        const bool groupContains = m_leftButtons->geometry().contains(event->posF()) || m_rightButtons->geometry().contains(event->posF());
+        const bool groupContains = m_leftButtons->geometry().contains(event->position().toPoint()) || m_rightButtons->geometry().contains(event->position().toPoint());
         setButtonHovered(groupContains);
     }
 
@@ -235,7 +236,7 @@ void Decoration::hoverMoveEvent(QHoverEvent *event)
 }
 
 //________________________________________________________________
-void Decoration::init()
+bool Decoration::init()
 {
     auto c = client().data();
 
@@ -251,21 +252,21 @@ void Decoration::init()
     reconfigure();
     updateTitleBar();
     auto s = settings();
-    connect(s.data(), &KDecoration2::DecorationSettings::borderSizeChanged, this, &Decoration::recalculateBorders);
+    connect(s.get(), &KDecoration2::DecorationSettings::borderSizeChanged, this, &Decoration::recalculateBorders);
 
     // a change in font might cause the borders to change
-    connect(s.data(), &KDecoration2::DecorationSettings::fontChanged, this, &Decoration::recalculateBorders);
-    connect(s.data(), &KDecoration2::DecorationSettings::spacingChanged, this, &Decoration::recalculateBorders);
+    connect(s.get(), &KDecoration2::DecorationSettings::fontChanged, this, &Decoration::recalculateBorders);
+    connect(s.get(), &KDecoration2::DecorationSettings::spacingChanged, this, &Decoration::recalculateBorders);
 
     // buttons
-    connect(s.data(), &KDecoration2::DecorationSettings::spacingChanged, this, &Decoration::updateButtonsGeometryDelayed);
-    connect(s.data(), &KDecoration2::DecorationSettings::decorationButtonsLeftChanged, this, &Decoration::updateButtonsGeometryDelayed);
-    connect(s.data(), &KDecoration2::DecorationSettings::decorationButtonsRightChanged, this, &Decoration::updateButtonsGeometryDelayed);
+    connect(s.get(), &KDecoration2::DecorationSettings::spacingChanged, this, &Decoration::updateButtonsGeometryDelayed);
+    connect(s.get(), &KDecoration2::DecorationSettings::decorationButtonsLeftChanged, this, &Decoration::updateButtonsGeometryDelayed);
+    connect(s.get(), &KDecoration2::DecorationSettings::decorationButtonsRightChanged, this, &Decoration::updateButtonsGeometryDelayed);
 
     // full reconfiguration
-    connect(s.data(), &KDecoration2::DecorationSettings::reconfigured, this, &Decoration::reconfigure);
-    connect(s.data(), &KDecoration2::DecorationSettings::reconfigured, SettingsProvider::self(), &SettingsProvider::reconfigure, Qt::UniqueConnection);
-    connect(s.data(), &KDecoration2::DecorationSettings::reconfigured, this, &Decoration::updateButtonsGeometryDelayed);
+    connect(s.get(), &KDecoration2::DecorationSettings::reconfigured, this, &Decoration::reconfigure);
+    connect(s.get(), &KDecoration2::DecorationSettings::reconfigured, SettingsProvider::self(), &SettingsProvider::reconfigure, Qt::UniqueConnection);
+    connect(s.get(), &KDecoration2::DecorationSettings::reconfigured, this, &Decoration::updateButtonsGeometryDelayed);
 
     connect(c, &KDecoration2::DecoratedClient::adjacentScreenEdgesChanged, this, &Decoration::recalculateBorders);
     connect(c, &KDecoration2::DecoratedClient::maximizedHorizontallyChanged, this, &Decoration::recalculateBorders);
@@ -287,6 +288,7 @@ void Decoration::init()
 
     createButtons();
     createShadow();
+    return true;
 }
 
 //________________________________________________________________
@@ -727,7 +729,7 @@ void Decoration::createShadow()
 
         const CompositeShadowParams params = lookupShadowParams(g_shadowSizeEnum);
         if (params.isNone()) {
-            g_sShadow.clear();
+            g_sShadow.reset();
             setShadow(g_sShadow);
             return;
         }
@@ -780,7 +782,7 @@ void Decoration::createShadow()
 
         painter.end();
 
-        g_sShadow = QSharedPointer<KDecoration2::DecorationShadow>::create();
+        g_sShadow = std::make_shared<KDecoration2::DecorationShadow>();
         g_sShadow->setPadding(padding);
         g_sShadow->setInnerShadowRect(QRect(outerRect.center(), QSize(1, 1)));
         g_sShadow->setShadow(shadowTexture);

@@ -166,15 +166,15 @@ namespace Lightly
                 break;
             }
 
-            case Qt::MidButton:
+            case Qt::MiddleButton:
             {
                 hide();
                 break;
             }
 
             case Qt::LeftButton:
-            if( rect().contains( event->pos() ) )
-            { sendMoveResizeEvent( event->pos() ); }
+            if( rect().contains( event->position().toPoint() ) )
+            { sendMoveResizeEvent( event->position().toPoint() ); }
             break;
 
             default: break;

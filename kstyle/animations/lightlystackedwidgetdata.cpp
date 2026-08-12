@@ -38,7 +38,7 @@ namespace Lightly
 
         // configure transition
         connect( _target.data(), &QObject::destroyed, this, &StackedWidgetData::targetDestroyed );
-        connect( _target.data(), SIGNAL(currentChanged(int)), SLOT(animate()) );
+        connect(_target.data(), &QStackedWidget::currentChanged, this, &StackedWidgetData::animate);
 
         // disable focus
         transition().data()->setAttribute(Qt::WA_NoMousePropagation, true);

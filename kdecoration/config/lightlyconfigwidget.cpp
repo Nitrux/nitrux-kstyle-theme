@@ -31,6 +31,8 @@
 
 #include <QDBusConnection>
 #include <QDBusMessage>
+#include <QComboBox>
+#include <QSpinBox>
 
 namespace Lightly
 {
@@ -46,8 +48,8 @@ namespace Lightly
         m_ui.setupUi( this );
 
         // track ui changes
-        connect( m_ui.titleAlignment, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
-        connect( m_ui.buttonSize, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect(m_ui.titleAlignment, qOverload<int>(&QComboBox::currentIndexChanged), this, &ConfigWidget::updateChanged);
+        connect(m_ui.buttonSize, qOverload<int>(&QComboBox::currentIndexChanged), this, &ConfigWidget::updateChanged);
         connect( m_ui.outlineCloseButton, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged );
         connect( m_ui.drawBorderOnMaximizedWindows, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged );
         connect( m_ui.drawSizeGrip, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged );
@@ -56,11 +58,11 @@ namespace Lightly
 
         // track animations changes
         connect( m_ui.animationsEnabled, &QAbstractButton::clicked, this, &ConfigWidget::updateChanged );
-        connect( m_ui.animationsDuration, SIGNAL(valueChanged(int)), SLOT(updateChanged()) );
+        connect(m_ui.animationsDuration, qOverload<int>(&QSpinBox::valueChanged), this, &ConfigWidget::updateChanged);
 
         // track shadows changes
-        connect( m_ui.shadowSize, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
-        connect( m_ui.shadowStrength, SIGNAL(valueChanged(int)), SLOT(updateChanged()) );
+        connect(m_ui.shadowSize, qOverload<int>(&QComboBox::currentIndexChanged), this, &ConfigWidget::updateChanged);
+        connect(m_ui.shadowStrength, qOverload<int>(&QSpinBox::valueChanged), this, &ConfigWidget::updateChanged);
         connect( m_ui.shadowColor, &KColorButton::changed, this, &ConfigWidget::updateChanged );
 
         // track exception changes

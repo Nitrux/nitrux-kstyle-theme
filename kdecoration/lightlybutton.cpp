@@ -54,8 +54,8 @@ Button::Button(DecorationButtonType type, Decoration *decoration, QObject *paren
     setIconSize(QSize(height, height));
 
     // connections
-    connect(decoration->client().data(), SIGNAL(iconChanged(QIcon)), this, SLOT(update()));
-    connect(decoration->settings().data(), &KDecoration2::DecorationSettings::reconfigured, this, &Button::reconfigure);
+    connect(decoration->client().data(), &KDecoration2::DecoratedClient::iconChanged, this, qOverload<>(&QWidget::update));
+    connect(decoration->settings().get(), &KDecoration2::DecorationSettings::reconfigured, this, &Button::reconfigure);
     connect(this, &KDecoration2::DecorationButton::hoveredChanged, this, &Button::updateAnimationState);
 
     if (decoration->objectName() == "applet-window-buttons") {
@@ -63,7 +63,7 @@ Button::Button(DecorationButtonType type, Decoration *decoration, QObject *paren
             decoration->setButtonHovered(hovered);
         });
     }
-    connect(decoration, SIGNAL(buttonHoveredChanged()), this, SLOT(update()));
+    connect(decoration, &Decoration::buttonHoveredChanged, this, qOverload<>(&QWidget::update));
 
     reconfigure();
 }
@@ -150,7 +150,7 @@ void Button::paint(QPainter *painter, const QRect &repaintRegion)
         if (auto deco = qobject_cast<Decoration *>(decoration())) {
             const QPalette activePalette = KIconLoader::global()->customPalette();
             QPalette palette = decoration()->client().data()->palette();
-            palette.setColor(QPalette::Foreground, deco->fontColor());
+            palette.setColor(QPalette::WindowText, deco->fontColor());
             KIconLoader::global()->setCustomPalette(palette);
             decoration()->client().data()->icon().paint(painter, iconRect.toRect());
             if (activePalette == QPalette()) {

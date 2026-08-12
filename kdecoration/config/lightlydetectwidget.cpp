@@ -113,7 +113,7 @@ namespace Lightly
         m_grabber->setModal( true );
         m_grabber->show();
 
-        // need to explicitly override cursor for Qt5
+        // need to explicitly override cursor for Qt6
         qApp->setOverrideCursor( Qt::CrossCursor );
         m_grabber->grabMouse( Qt::CrossCursor );
         m_grabber->installEventFilter( this );
@@ -127,7 +127,7 @@ namespace Lightly
         if( o != m_grabber ) return false;
         if( e->type() != QEvent::MouseButtonRelease ) return false;
 
-        // need to explicitly release cursor for Qt5
+        // need to explicitly release cursor for Qt6
         qApp->restoreOverrideCursor();
 
         // delete old m_grabber

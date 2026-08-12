@@ -44,7 +44,7 @@ namespace Lightly
             _data.insert( object, new BusyIndicatorData( this ) );
 
             // connect destruction signal
-            connect( object, SIGNAL(destroyed(QObject*)), this, SLOT(unregisterWidget(QObject*)), Qt::UniqueConnection );
+            connect(object, &QObject::destroyed, this, &BaseEngine::unregisterWidget, Qt::UniqueConnection);
         }
 
         return true;

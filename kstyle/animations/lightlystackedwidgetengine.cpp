@@ -37,8 +37,8 @@ namespace Lightly
         if( !_data.contains( widget ) ) { _data.insert( widget, new StackedWidgetData( this, widget, duration() ), enabled() ); }
 
         // connect destruction signal
-        disconnect( widget, SIGNAL(destroyed(QObject*)), this, SLOT(unregisterWidget(QObject*)) );
-        connect( widget, SIGNAL(destroyed(QObject*)), this, SLOT(unregisterWidget(QObject*)) );
+        disconnect(widget, &QObject::destroyed, this, &BaseEngine::unregisterWidget);
+        connect(widget, &QObject::destroyed, this, &BaseEngine::unregisterWidget);
 
         return true;
 

@@ -27,6 +27,8 @@
 #include "lightlydetectwidget.h"
 #include "config-lightly.h"
 
+#include <QComboBox>
+
 #if LIGHTLY_HAVE_X11
 #include <QX11Info>
 #endif
@@ -50,9 +52,9 @@ namespace Lightly
         connect( m_ui.detectDialogButton, &QAbstractButton::clicked, this, &ExceptionDialog::selectWindowProperties );
 
         // connections
-        connect( m_ui.exceptionType, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect(m_ui.exceptionType, qOverload<int>(&QComboBox::currentIndexChanged), this, &ExceptionDialog::updateChanged);
         connect( m_ui.exceptionEditor, &QLineEdit::textChanged, this, &ExceptionDialog::updateChanged );
-        connect( m_ui.borderSizeComboBox, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect(m_ui.borderSizeComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &ExceptionDialog::updateChanged);
 
         for( CheckBoxMap::iterator iter = m_checkboxes.begin(); iter != m_checkboxes.end(); ++iter )
         { connect( iter.value(), &QAbstractButton::clicked, this, &ExceptionDialog::updateChanged ); }

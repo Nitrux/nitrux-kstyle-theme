@@ -35,7 +35,7 @@ namespace Lightly
         if( !_focusData.contains( widget ) ) _focusData.insert( widget, new TabBarData( this, widget, duration() ), enabled() );
 
         // connect destruction signal
-        connect( widget, SIGNAL(destroyed(QObject*)), this, SLOT(unregisterWidget(QObject*)), Qt::UniqueConnection );
+        connect(widget, &QObject::destroyed, this, &BaseEngine::unregisterWidget, Qt::UniqueConnection);
         return true;
 
     }

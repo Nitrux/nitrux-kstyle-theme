@@ -499,7 +499,7 @@ private:
      */
     bool hasHighlightNeutral(const QObject *widget, const QStyleOption *option, bool mouseOver, bool focus = false) const;
 
-    //* A solution for Qt5's problem with translucent windows
+    //* A solution for Qt6's problem with translucent windows
     void setSurfaceFormat(QWidget *w) const;
     void setSurfaceFormat(const QWidget *w) const
     {

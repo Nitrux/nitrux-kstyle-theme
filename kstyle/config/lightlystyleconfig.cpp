@@ -26,6 +26,8 @@
 
 #include <QDBusMessage>
 #include <QDBusConnection>
+#include <QComboBox>
+#include <QSpinBox>
 
 extern "C"
 {
@@ -53,18 +55,18 @@ namespace Lightly
         connect( _titleWidgetDrawFrame, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
         connect( _sidePanelDrawFrame, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
         connect( _menuItemDrawThinFocus, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
-        connect( _mnemonicsMode, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect(_mnemonicsMode, qOverload<int>(&QComboBox::currentIndexChanged), this, &StyleConfig::updateChanged);
         connect( _animationsEnabled, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
-        connect( _animationsDuration, SIGNAL(valueChanged(int)), SLOT(updateChanged()) );
-        connect( _scrollBarAddLineButtons, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
-        connect( _scrollBarSubLineButtons, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
-        connect( _windowDragMode, SIGNAL(currentIndexChanged(int)), SLOT(updateChanged()) );
+        connect(_animationsDuration, qOverload<int>(&QSpinBox::valueChanged), this, &StyleConfig::updateChanged);
+        connect(_scrollBarAddLineButtons, qOverload<int>(&QComboBox::currentIndexChanged), this, &StyleConfig::updateChanged);
+        connect(_scrollBarSubLineButtons, qOverload<int>(&QComboBox::currentIndexChanged), this, &StyleConfig::updateChanged);
+        connect(_windowDragMode, qOverload<int>(&QComboBox::currentIndexChanged), this, &StyleConfig::updateChanged);
         connect( _menuOpacity, &QAbstractSlider::valueChanged, this, &StyleConfig::updateChanged );
         connect( _sidebarOpacity, &QAbstractSlider::valueChanged, this, &StyleConfig::updateChanged );
         connect( _kTextEditDrawFrame, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
         connect( _widgetDrawShadow, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
         connect( _transparentDolphinView, &QAbstractButton::toggled, this, &StyleConfig::updateChanged );
-        connect( _cornerRadius, SIGNAL(valueChanged(int)), SLOT(updateChanged()) );
+        connect(_cornerRadius, qOverload<int>(&QSpinBox::valueChanged), this, &StyleConfig::updateChanged);
 
     }
 

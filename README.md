@@ -1,12 +1,13 @@
-# Nitrux KStyle [![Build Status](https://travis-ci.org/nx-desktop/nx-kstyle-theme.svg?branch=master)](https://travis-ci.org/nx-desktop/nx-kstyle-theme)
+# Nitrux KStyle
 
-*Nitrux* is a fork of the Lightly theme style customized to provide the Nitrux Kvantum themes' styling. 
-
-## Acknowledgments
-Breeze authors, Kvantum developer Pedram Pourang, Luwx.
-
+A widget style and KWin decoration based on Lightly, customized for Nitrux.
 
 # Issues
-If you find problems with the contents of this repository please create an issue.
 
-©2021 Nitrux Latinoamericana S.C.
+If you find problems with the contents of this repository, please create an issue and use the **🐞 Bug report** template.
+
+## Submitting a bug report
+
+Before submitting a bug, you should look at the [existing bug reports](https://github.com/Nitrux/nitrux-kstyle-theme/issues) to verify that no one has reported the bug already.
+
+©2026 Nitrux Latinoamericana S.C.

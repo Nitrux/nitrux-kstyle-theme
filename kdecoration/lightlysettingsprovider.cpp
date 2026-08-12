@@ -25,6 +25,7 @@
 #include <KWindowInfo>
 
 #include <QTextStream>
+#include <QRegularExpression>
 
 namespace Lightly
 {
@@ -118,7 +119,7 @@ namespace Lightly
             }
 
             // check matching
-            if( QRegExp( internalSettings->exceptionPattern() ).indexIn( value ) >= 0 )
+            if( QRegularExpression( internalSettings->exceptionPattern() ).match( value ).hasMatch() )
             { return internalSettings; }
 
         }

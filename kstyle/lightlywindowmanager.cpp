@@ -422,8 +422,8 @@ namespace Lightly
         if( auto item = qobject_cast<QQuickItem*>( object ) )
         {
             _quickTarget = item;
-            _dragPoint = mouseEvent->pos();
-            _globalDragPoint = mouseEvent->globalPos();
+            _dragPoint = mouseEvent->position().toPoint();
+            _globalDragPoint = mouseEvent->globalPosition().toPoint();
 
             if( _dragTimer.isActive() ) _dragTimer.stop();
             _dragTimer.start( _dragDelay, this );
@@ -439,14 +439,14 @@ namespace Lightly
         if( isBlackListed( widget ) || !canDrag( widget ) ) return false;
 
         // retrieve widget's child at event position
-        auto position( mouseEvent->pos() );
+        auto position( mouseEvent->position().toPoint() );
         auto child = widget->childAt( position );
         if( !canDrag( widget, child, position ) ) return false;
 
         // save target and drag point
         _target = widget;
         _dragPoint = position;
-        _globalDragPoint = mouseEvent->globalPos();
+        _globalDragPoint = mouseEvent->globalPosition().toPoint();
         _dragAboutToStart = true;
 
         // send a move event to the current child with same position
@@ -480,7 +480,7 @@ namespace Lightly
 
             if( _dragAboutToStart )
             {
-                if( mouseEvent->pos() == _dragPoint )
+                if( mouseEvent->position().toPoint() == _dragPoint )
                 {
                     // start timer,
                     _dragAboutToStart = false;
@@ -489,7 +489,7 @@ namespace Lightly
 
                 } else resetDrag();
 
-            } else if( QPoint( mouseEvent->globalPos() - _globalDragPoint ).manhattanLength() >= _dragDistance ) {
+            } else if( QPoint( mouseEvent->globalPosition().toPoint() - _globalDragPoint ).manhattanLength() >= _dragDistance ) {
 
                 _dragTimer.start( 0, this );
 
@@ -502,7 +502,7 @@ namespace Lightly
             // use QWidget::move for the grabbing
             /* this works only if the sending object and the target are identical */
             auto window( _target.data()->window() );
-            window->move( window->pos() + mouseEvent->pos() - _dragPoint );
+            window->move( window->pos() + mouseEvent->position().toPoint() - _dragPoint );
             return true;
 
         } else return false;

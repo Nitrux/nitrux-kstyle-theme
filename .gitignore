@@ -1,2 +1,31 @@
-build
-rename
+Generated and compiled files
+*.a
+*.bak
+*.build
+*.buildinfo
+*.changes
+*.dsc
+*.deb
+*.directory
+*.o
+*.orig
+*.rej
+*.so
+*.so.*
+*.swp
+*.tar.*
+*.user
+
+/.cache/
+/build/
+/cmake-build-*/
+compile_commands.json
+
+# CMake and packaging output
+/.ninja_deps
+/.ninja_log
+/build-*/
+/package-root/
+*.log
+*.rpm
+*.pkg.tar.*

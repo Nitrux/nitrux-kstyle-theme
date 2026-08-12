@@ -36,7 +36,7 @@ namespace Lightly
         if( mode&AnimationFocus && !dataMap(AnimationFocus).contains( widget ) ) { dataMap(AnimationFocus).insert( widget, new WidgetStateData( this, widget, duration() ), enabled() ); }
 
         // connect destruction signal
-        connect( widget, SIGNAL(destroyed(QObject*)), this, SLOT(unregisterWidget(QObject*)), Qt::UniqueConnection );
+        connect(widget, &QObject::destroyed, this, &BaseEngine::unregisterWidget, Qt::UniqueConnection);
 
         return true;
     }

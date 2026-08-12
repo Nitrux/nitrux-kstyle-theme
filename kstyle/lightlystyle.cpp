@@ -54,6 +54,7 @@
 #include <QMenuBar>
 #include <QPainter>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QRadioButton>
 #include <QScrollBar>
 #include <QSplitterHandle>
@@ -1518,7 +1519,7 @@ bool Style::eventFilterScrollArea(QWidget *widget, QEvent *event)
                 offset = QPoint(QApplication::isLeftToRight() ? frameWidth : -frameWidth, 0);
 
             // map position to scrollarea
-            QPoint position(scrollBar->mapFrom(widget, mouseEvent->pos() - offset));
+            QPoint position(scrollBar->mapFrom(widget, mouseEvent->position().toPoint() - offset));
 
             // check if contains
             if (!scrollBar->rect().contains(position))
@@ -8095,7 +8096,7 @@ bool Style::hasHighlightNeutral(const QObject *widget, const QStyleOption *optio
 // Taken from Kvantum
 /*
     To make Qt windows translucent, we should set the surface format of
-    their native handles BEFORE they're created but Qt5 windows are
+    their native handles BEFORE they're created but Qt6 windows are
     often polished AFTER they're created, so that setting the attribute
     "WA_TranslucentBackground" in "Style::polish()" would have no effect.
 
