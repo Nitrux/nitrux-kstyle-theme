@@ -39,5 +39,28 @@ make -j"$(nproc)"
 
 # -- Run checkinstall and Build Debian Package
 
-printf "%s\n" "Nitrux Qt6/KF6 KStyle and KWin decoration." "" "A Qt6/KF6 widget style and KWin decoration based on Lightly, customized for Nitrux." "" > description-pak
-checkinstall -D -y --install=no --fstrans=yes --pkgname=nx-kstyle-theme --pkgversion="$PACKAGE_VERSION" --pkgarch="$(dpkg --print-architecture)" --pkgrelease="1" --pkglicense=BSD-3 --pkggroup=utils --pkgsource=nx-kstyle-theme --pakdir=. --maintainer=uri_herrera@nxos.org --provides=nx-kstyle-theme --requires="kwin,libqt6core6t64,libqt6gui6,libqt6widgets6,libqt6dbus6,libkf6configcore6,libkf6coreaddons6,libkf6guiaddons6,libkf6i18n6,libkf6iconthemes6,libkf6windowsystem6,libkdecorations2-6" --nodoc --strip=no --stripso=yes --reset-uids=yes --deldesc=yes
+>> description-pak printf "%s\n" \
+	'Nitrux Qt6/KF6 KStyle and KWin decoration.' \
+	'' \
+	'A Qt6/KF6 widget style and KWin decoration based on Lightly, customized for Nitrux.' \
+	''
+
+checkinstall -D -y \
+	--install=no \
+	--fstrans=yes \
+	--pkgname=nitrux-kstyle-theme \
+	--pkgversion="$PACKAGE_VERSION" \
+	--pkgarch="$(dpkg --print-architecture)" \
+	--pkgrelease="1" \
+	--pkglicense=GPL-2 \
+	--pkggroup=utils \
+	--pkgsource=nitrux-kstyle-theme \
+	--pakdir=. \
+	--maintainer=uri_herrera@nxos.org \
+	--provides=nitrux-kstyle-theme \
+	--requires="kwin-wayland,libqt6core6t64,libqt6gui6,libqt6widgets6,libqt6dbus6,libkf6configcore6,libkf6coreaddons6,libkf6guiaddons6,libkf6i18n6,libkf6iconthemes6,libkf6windowsystem6,libkdecorations2-6" \
+	--nodoc \
+	--strip=no \
+	--stripso=yes \
+	--reset-uids=yes \
+	--deldesc=yes
