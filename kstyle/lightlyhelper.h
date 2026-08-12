@@ -29,6 +29,7 @@
 
 #include <KColorScheme>
 #include <KSharedConfig>
+#include <KStatefulBrush>
 
 #include <QIcon>
 #include <QPainterPath>
@@ -473,6 +474,8 @@ public:
     QPixmap coloredIcon(const QIcon &icon, const QPalette &palette, const QSize &size, QIcon::Mode mode = QIcon::Normal, QIcon::State state = QIcon::Off);
 
 protected:
+    bool eventFilter(QObject *, QEvent *) override;
+
     //* return rounded path in a given rect, with only selected corners rounded, and for a given radius
     QPainterPath roundedPath(const QRectF &, Corners, qreal) const;
 

@@ -26,13 +26,14 @@ fi
 cmake \
 	-DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_SYSCONFDIR=/etc \
-	-DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+	-DKDE_INSTALL_SYSCONFDIR=/etc \
+	-DKDE_INSTALL_LOCALSTATEDIR=/var \
 	-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON \
 	-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
-	-DCMAKE_INSTALL_RUNSTATEDIR=/run "-GUnix Makefiles" \
+	-DKDE_INSTALL_RUNSTATEDIR=/run "-GUnix Makefiles" \
 	-DCMAKE_VERBOSE_MAKEFILE=ON \
-	-DCMAKE_INSTALL_LIBDIR="/usr/lib/${HOST_MULTIARCH}" \
+	-DWITH_DECORATIONS=OFF \
+	-DKDE_INSTALL_LIBDIR="/usr/lib/${HOST_MULTIARCH}" \
 	..
 make -j"$(nproc)"
 
@@ -40,9 +41,9 @@ make -j"$(nproc)"
 # -- Run checkinstall and Build Debian Package
 
 >> description-pak printf "%s\n" \
-	'Nitrux Qt6/KF6 KStyle and KWin decoration.' \
+	'Nitrux Qt6/KF6 KStyle.' \
 	'' \
-	'A Qt6/KF6 widget style and KWin decoration based on Lightly, customized for Nitrux.' \
+	'A Qt6/KF6 widget style based on Lightly, customized for Nitrux.' \
 	''
 
 checkinstall -D -y \
@@ -58,7 +59,7 @@ checkinstall -D -y \
 	--pakdir=. \
 	--maintainer=uri_herrera@nxos.org \
 	--provides=nitrux-kstyle-theme \
-	--requires="kwin-wayland,libqt6core6t64,libqt6gui6,libqt6widgets6,libqt6dbus6,libkf6configcore6,libkf6coreaddons6,libkf6guiaddons6,libkf6i18n6,libkf6iconthemes6,libkf6windowsystem6,libkdecorations2-6" \
+	--requires="frameworkintegration6,libkf6configcore6,libkf6coreaddons6,libkf6guiaddons6,libkf6i18n6,libkf6iconthemes6,libkf6kcmutils6,libkf6windowsystem6,libkwaylandclient6,libkirigami6,libqt6core6t64,libqt6dbus6,libqt6gui6,libqt6widgets6" \
 	--nodoc \
 	--strip=no \
 	--stripso=yes \

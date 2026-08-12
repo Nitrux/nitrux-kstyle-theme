@@ -1,13 +1,6 @@
-find_package(XCB COMPONENTS XCB)
-set_package_properties(XCB PROPERTIES TYPE OPTIONAL DESCRIPTION "X protocol C-language Binding" PURPOSE "Required for X11 native window integration")
-if(UNIX AND NOT APPLE AND XCB_XCB_FOUND)
-    find_package(Qt6 REQUIRED CONFIG COMPONENTS X11Extras)
-    set(LIGHTLY_HAVE_X11 TRUE)
-else()
-    set(LIGHTLY_HAVE_X11 FALSE)
-endif()
+set(LIGHTLY_HAVE_X11 FALSE)
 
-find_package(KF6Wayland CONFIG)
+find_package(KF6Wayland CONFIG QUIET)
 set(LIGHTLY_HAVE_KWAYLAND ${KF6Wayland_FOUND})
 
 ################# includes #################
@@ -111,13 +104,7 @@ endif()
 
 target_link_libraries(lightly6 lightlycommon6)
 
-if(KF6FrameworkIntegration_FOUND)
-    target_link_libraries(lightly6  KF6::Style)
-endif()
 
-if(LIGHTLY_HAVE_X11)
-    target_link_libraries(lightly6 Qt6::X11Extras XCB::XCB)
-endif()
 if(LIGHTLY_HAVE_KWAYLAND)
     target_link_libraries(lightly6 KF6::WaylandClient)
 endif()

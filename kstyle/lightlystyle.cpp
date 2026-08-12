@@ -155,7 +155,7 @@ private:
 //_______________________________________________________________
 bool isProgressBarHorizontal(const QStyleOptionProgressBar *option)
 {
-    return option && ((option->state & QStyle::State_Horizontal) || option->orientation == Qt::Horizontal);
+    return option && (option->state & QStyle::State_Horizontal);
 }
 
 //* list of possible valid toolbars to be translucent
@@ -201,11 +201,7 @@ Style::Style()
                  QStringLiteral("reparseConfiguration"),
                  this,
                  SLOT(configurationChanged()));
-#if QT_VERSION < 0x050D00 // Check if Qt version < 5.13
-    this->addEventFilter(qApp);
-#else
-    connect(qApp, &QApplication::paletteChanged, this, &Style::configurationChanged);
-#endif
+    addEventFilter(qApp);
     // call the slot directly; this initial call will set up things that also
     // need to be reset when the system palette changes
     loadConfiguration();
@@ -1070,7 +1066,7 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption *option, 
     case PE_IndicatorBranch:
         fcn = &Style::drawIndicatorBranchPrimitive;
         break;
-    case PE_FrameStatusBar:
+    case PE_FrameStatusBarItem:
         fcn = &Style::emptyPrimitive;
         break;
     case PE_Frame:
@@ -1321,11 +1317,10 @@ bool Style::eventFilter(QObject *object, QEvent *event)
     } else if (auto commandLinkButton = qobject_cast<QCommandLinkButton *>(object)) {
         return eventFilterCommandLinkButton(commandLinkButton, event);
     }
-#if QT_VERSION < 0x050D00 // Check if Qt version < 5.13
     else if (object == qApp && event->type() == QEvent::ApplicationPaletteChange) {
         configurationChanged();
+        return false;
     }
-#endif
     // cast to QWidget
     QWidget *widget = static_cast<QWidget *>(object);
     if (widget->inherits("QAbstractScrollArea") || widget->inherits("KTextEditor::View")) {
@@ -1526,7 +1521,7 @@ bool Style::eventFilterScrollArea(QWidget *widget, QEvent *event)
                 continue;
 
             // copy event, send and return
-            QMouseEvent copy(mouseEvent->type(), position, mouseEvent->button(), mouseEvent->buttons(), mouseEvent->modifiers());
+            QMouseEvent copy(mouseEvent->type(), position, mouseEvent->globalPosition(), mouseEvent->button(), mouseEvent->buttons(), mouseEvent->modifiers());
 
             QCoreApplication::sendEvent(scrollBar, &copy);
             event->setAccepted(true);
@@ -1593,7 +1588,8 @@ bool Style::eventFilterDockWidget(QDockWidget *dockWidget, QEvent *event)
         if (dockWidget->isFloating()) {
             _helper->renderMenuFrame(&painter, rect, background, outline, false);
 
-        } else if (StyleConfigData::dockWidgetDrawFrame() || (dockWidget->features() & QDockWidget::AllDockWidgetFeatures)) {
+        } else if (StyleConfigData::dockWidgetDrawFrame()
+                   && (dockWidget->features() & (QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable))) {
             _helper->renderFrame(&painter, rect, background, palette, windowActive);
 
         } else {
@@ -3607,7 +3603,7 @@ bool Style::drawFrameMenuPrimitive(const QStyleOption *option, QPainter *painter
 }
 
 //______________________________________________________________
-bool Style::drawFrameGroupBoxPrimitive(const QStyleOption *option, QPainter *painter, const QWidget *widget) const
+bool Style::drawFrameGroupBoxPrimitive(const QStyleOption *option, QPainter *painter, const QWidget *) const
 {
     // cast option and check
     const auto frameOption(qstyleoption_cast<const QStyleOptionFrame *>(option));
@@ -3882,8 +3878,6 @@ bool Style::drawPanelButtonCommandPrimitive(const QStyleOption *option, QPainter
         return true;
 
     // store window state
-    const bool windowActive(widget && widget->isActiveWindow());
-
     // rect and palette
     const auto &rect(option->rect);
 
@@ -3939,7 +3933,7 @@ bool Style::drawPanelButtonToolPrimitive(const QStyleOption *option, QPainter *p
     auto rect(option->rect);
 
     // store relevant flags
-    const bool windowActive(widget && widget->isActiveWindow());
+
     const State &state(option->state);
     const bool autoRaise(state & State_AutoRaise);
     const bool enabled(state & State_Enabled);
@@ -5336,7 +5330,7 @@ bool Style::drawMenuItemControl(const QStyleOption *option, QPainter *painter, c
         const auto color = _helper->focusColor(palette);
         const auto outlineColor = _helper->focusOutlineColor(palette);
 
-        Sides sides = nullptr;
+        Sides sides;
         if (!menuItemOption->menuRect.isNull()) {
             if (rect.top() <= menuItemOption->menuRect.top())
                 sides |= SideTop;
@@ -7005,7 +6999,7 @@ bool Style::drawComboBoxComplexControl(const QStyleOptionComplex *option, QPaint
         return true;
 
     // store window state
-    const bool windowActive(widget && widget->isActiveWindow());
+
 
     // rect and palette
     const auto &rect(option->rect);

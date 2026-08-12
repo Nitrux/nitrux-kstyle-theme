@@ -26,6 +26,7 @@
 #include <KWindowSystem>
 
 #include <QApplication>
+#include <QEvent>
 #include <QPainter>
 #include <QtMath>
 
@@ -44,22 +45,29 @@ static const qreal arrowShade = 0.15;
 
 //____________________________________________________________________
 Helper::Helper(KSharedConfig::Ptr config, QObject *parent)
-    : _config(std::move(config))
+    : QObject(parent)
+    , _config(std::move(config))
 {
-    if (qApp) {
-        connect(qApp, &QApplication::paletteChanged, this, [=]() {
-            if (qApp->property("KDE_COLOR_SCHEME_PATH").isValid()) {
-                const auto path = qApp->property("KDE_COLOR_SCHEME_PATH").toString();
-                KConfig config(path, KConfig::SimpleConfig);
-                KConfigGroup group(config.group("WM"));
-                const QPalette palette(QApplication::palette());
-                _activeTitleBarColor = group.readEntry("activeBackground", palette.color(QPalette::Active, QPalette::Highlight));
-                _activeTitleBarTextColor = group.readEntry("activeForeground", palette.color(QPalette::Active, QPalette::HighlightedText));
-                _inactiveTitleBarColor = group.readEntry("inactiveBackground", palette.color(QPalette::Disabled, QPalette::Highlight));
-                _inactiveTitleBarTextColor = group.readEntry("inactiveForeground", palette.color(QPalette::Disabled, QPalette::HighlightedText));
-            }
-        });
+    if (qApp)
+        qApp->installEventFilter(this);
+}
+
+//____________________________________________________________________
+bool Helper::eventFilter(QObject *object, QEvent *event)
+{
+    if (object == qApp && event->type() == QEvent::ApplicationPaletteChange
+        && qApp->property("KDE_COLOR_SCHEME_PATH").isValid()) {
+        const auto path = qApp->property("KDE_COLOR_SCHEME_PATH").toString();
+        KConfig config(path, KConfig::SimpleConfig);
+        KConfigGroup group(config.group("WM"));
+        const QPalette palette(QApplication::palette());
+        _activeTitleBarColor = group.readEntry("activeBackground", palette.color(QPalette::Active, QPalette::Highlight));
+        _activeTitleBarTextColor = group.readEntry("activeForeground", palette.color(QPalette::Active, QPalette::HighlightedText));
+        _inactiveTitleBarColor = group.readEntry("inactiveBackground", palette.color(QPalette::Disabled, QPalette::Highlight));
+        _inactiveTitleBarTextColor = group.readEntry("inactiveForeground", palette.color(QPalette::Disabled, QPalette::HighlightedText));
     }
+
+    return false;
 }
 
 //____________________________________________________________________
@@ -148,6 +156,9 @@ QColor Helper::buttonHoverOutlineColor(const QPalette &palette) const
 //____________________________________________________________________
 QColor Helper::sidePanelOutlineColor(const QPalette &palette, bool hasFocus, qreal opacity, AnimationMode mode) const
 {
+    Q_UNUSED(hasFocus)
+    Q_UNUSED(opacity)
+    Q_UNUSED(mode)
     QColor outline(qGray(palette.color(QPalette::Window).rgb()) > 150 ? QColor(0, 0, 0, 20) : QColor(0, 0, 0, 50));
     return outline;
 }
@@ -470,6 +481,7 @@ void Helper::renderFocusLine(QPainter *painter, const QRect &rect, const QColor 
 //______________________________________________________________________________
 void Helper::renderFrame(QPainter *painter, const QRect &rect, const QColor &color, const QPalette &palette, const bool windowActive, const bool enabled) const
 {
+    Q_UNUSED(palette)
     painter->setRenderHint(QPainter::Antialiasing);
 
     // QRectF frameRect( rect.adjusted( 1, 1, -1, -1 ) );
@@ -688,6 +700,7 @@ void Helper::renderButtonFrame(QPainter *painter,
                                bool hasFocus,
                                bool sunken) const
 {
+    Q_UNUSED(shadow)
     // setup painter
     painter->setRenderHint(QPainter::Antialiasing, true);
 
@@ -953,7 +966,6 @@ void Helper::renderSelection(QPainter *painter, const QRect &rect, const QColor 
     */
     //<>
     painter->setRenderHint(QPainter::Antialiasing);
-    const qreal radius(frameRadius(PenWidth::Frame));
     painter->setPen(color.darker(125));
     const QRectF outlineRect(strokedRect(rect));
     painter->setBrush(color);
@@ -1012,7 +1024,7 @@ void Helper::renderLineEdit(QPainter *painter,
                 // renderBoxShadow( painter, frameRect, 0, 1, 6, alphaColor(outline.darker(120), opacity) , radius, windowActive );
                 // renderBoxShadow( painter, frameRect, 0, 1, 4, alphaColor(outline.darker(120), opacity) , radius, windowActive );
 
-                const qreal finalRadius((frameRect.width() + Metrics::Frame_FrameWidth) * opacity);
+                const qreal finalRadius((frameRect.width() + static_cast<qreal>(Metrics::Frame_FrameWidth)) * opacity);
 
                 QPixmap mask = QPixmap(rect.width(), rect.height());
                 mask.fill(Qt::transparent);
@@ -1064,7 +1076,7 @@ void Helper::renderLineEdit(QPainter *painter,
         else {
             // focus out animation
             if (mode == 2 && opacity > 0 && opacity < 1) {
-                const qreal finalRadius((frameRect.width() + Metrics::Frame_FrameWidth) * opacity);
+                const qreal finalRadius((frameRect.width() + static_cast<qreal>(Metrics::Frame_FrameWidth)) * opacity);
 
                 QPixmap mask = QPixmap(rect.width(), rect.height());
                 mask.fill(Qt::transparent);
@@ -1635,7 +1647,7 @@ void Helper::renderSliderGroove(QPainter *painter, const QRect &rect, const QCol
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     const QRectF baseRect(rect);
-    const qreal radius(0.5 * Metrics::Slider_GrooveThickness);
+    const qreal radius(0.5 * static_cast<qreal>(Metrics::Slider_GrooveThickness));
 
     // content
     if (color.isValid()) {
@@ -1754,7 +1766,7 @@ void Helper::renderProgressBarGroove(QPainter *painter, const QRect &rect, const
     // https://stackoverflow.com/questions/29196610/qt-drawing-a-filled-rounded-rectangle-with-border
     QRectF baseRect(rect);
     baseRect.adjust(antialiasingfix, antialiasingfix, -antialiasingfix, -antialiasingfix);
-    //<> const qreal radius(0.5 * Metrics::ProgressBar_Thickness);
+    //<> const qreal radius(0.5 * static_cast<qreal>(Metrics::ProgressBar_Thickness));
 
     const qreal radius(StyleConfigData::cornerRadius());
     // content
@@ -1783,7 +1795,7 @@ void Helper::renderProgressBarBusyContents(QPainter *painter,
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     const QRectF baseRect(rect);
-    const qreal radius(0.5 * Metrics::ProgressBar_Thickness);
+    const qreal radius(0.5 * static_cast<qreal>(Metrics::ProgressBar_Thickness));
 
     // setup brush
     QPixmap pixmap(horizontal ? 2 * Metrics::ProgressBar_BusyIndicatorSize : 1, horizontal ? 1 : 2 * Metrics::ProgressBar_BusyIndicatorSize);
@@ -2142,8 +2154,8 @@ bool Helper::compositingActive() const
     }
 #endif
 
-    // use KWindowSystem
-    return KWindowSystem::compositingActive();
+    // Wayland does not expose a compositor-state query through KWindowSystem.
+    return true;
 }
 
 //____________________________________________________________________

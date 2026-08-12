@@ -1,6 +1,6 @@
 # Nitrux KStyle
 
-A widget style and KWin decoration based on Lightly, customized for Nitrux.
+A Qt6/KF6 widget style based on Lightly, customized for Nitrux.
 
 # Issues
 

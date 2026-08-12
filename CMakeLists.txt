@@ -9,8 +9,6 @@ set(QT_MIN_VERSION "6.6.0")
 include(GenerateExportHeader)
 include(WriteBasicConfigVersionFile)
 include(FeatureSummary)
-include(GNUInstallDirs)
-
 find_package(ECM ${KF6_MIN_VERSION} REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
 
@@ -42,7 +40,7 @@ set(QT_MAJOR_VERSION 6)
 include(KDEInstallDirs6)
 include(KDECMakeSettings)
 
-option(WITH_DECORATIONS "Build Lightly window decorations for KWin" ON)
+option(WITH_DECORATIONS "Build Lightly window decorations for KWin" OFF)
 
 find_package(Qt6 ${QT_MIN_VERSION} REQUIRED CONFIG COMPONENTS Widgets DBus)
 find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
@@ -67,14 +65,7 @@ find_package(Qt6 ${QT_MIN_VERSION} OPTIONAL_COMPONENTS Quick)
         find_package(KF6KirigamiPlatform ${KF6_MIN_VERSION} REQUIRED)
     endif()
 
-find_package(KF6FrameworkIntegration ${KF6_MIN_VERSION} CONFIG )
-    set_package_properties(KF6FrameworkIntegration PROPERTIES
-        DESCRIPTION "KF6 Framework Integration"
-        URL "https://projects.kde.org/projects/frameworks/frameworkintegration"
-        TYPE OPTIONAL
-        PURPOSE "Required to use KStyle convenience functionalities in style")
-
-set(LIGHTLY_HAVE_KSTYLE ${KF6FrameworkIntegration_FOUND})
+set(LIGHTLY_HAVE_KSTYLE FALSE)
 set(LIGHTLY_HAVE_QTQUICK ${Qt6Quick_FOUND})
 
 

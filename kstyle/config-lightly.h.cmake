@@ -25,7 +25,7 @@
 /* Define to 1 if QtQuick is available */
 #cmakedefine01 LIGHTLY_HAVE_QTQUICK
 
-/* Define to 1 if FrameworkIntegration/Kstyle libraries are found */
+/* Define to 1 if KF6 Style integration are found */
 #cmakedefine01 LIGHTLY_HAVE_KSTYLE
 
 /* Define to 1 if XCB libraries are found */

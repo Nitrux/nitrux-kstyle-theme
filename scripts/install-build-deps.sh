@@ -32,15 +32,12 @@ fi
     qt6-base-dev \
     qt6-declarative-dev \
     qt6-svg-dev \
-    libkdecorations2-dev \
     libkf6colorscheme-dev \
     libkf6config-dev \
     libkf6configwidgets-dev \
     libkf6guiaddons-dev \
     libkf6iconthemes-dev \
     libkf6kcmutils-dev \
-    libkf6style-dev \
-    libkf6wayland-dev \
-    libqt6x11extras6-dev \
-    libxcb1-dev \
+    kwayland-dev \
+    libkirigami-dev \
     qt6-wayland-dev

@@ -172,7 +172,7 @@ namespace Lightly
             post some mouseRelease event to the target, in order to counter balance
             the mouse press that triggered the drag. Note that it triggers a resetDrag
             */
-            QMouseEvent mouseEvent( QEvent::MouseButtonRelease, _parent->_dragPoint, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier );
+            QMouseEvent mouseEvent(QEvent::MouseButtonRelease, _parent->_dragPoint, _parent->_globalDragPoint, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
             qApp->sendEvent( _parent->_target.data(), &mouseEvent );
 
             return false;
@@ -454,7 +454,7 @@ namespace Lightly
         auto localPoint( _dragPoint );
         if( child ) localPoint = child->mapFrom( widget, localPoint );
         else child = widget;
-        QMouseEvent localMouseEvent( QEvent::MouseMove, localPoint, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier );
+        QMouseEvent localMouseEvent(QEvent::MouseMove, localPoint, _globalDragPoint, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         qApp->sendEvent( child, &localMouseEvent );
 
         // never eat event
