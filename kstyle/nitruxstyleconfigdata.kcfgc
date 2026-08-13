@@ -1,0 +1,6 @@
+File=nitrux.kcfg
+ClassName=StyleConfigData
+NameSpace=Nitrux
+Singleton=true
+Mutators=true
+GlobalEnums=true

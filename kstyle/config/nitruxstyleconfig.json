@@ -1,0 +1,9 @@
+{
+    "KPlugin": {
+        "Name": "Nitrux Widget Style",
+        "Description": "Configure the Nitrux Qt widget style",
+        "Icon": "preferences-desktop-theme",
+        "ServiceTypes": ["KCModule"]
+    },
+    "X-KDE-Keywords": "nitrux,widget,style"
+}

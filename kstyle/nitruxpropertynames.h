@@ -1,0 +1,27 @@
+/*
+ * SPDX-FileCopyrightText: 2014 Hugo Pereira Da Costa <hugo.pereira@free.fr>
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+#pragma once
+
+namespace Nitrux
+{
+struct PropertyNames {
+    static const char noAnimations[];
+    static const char noWindowGrab[];
+    static const char sidePanelView[];
+    static const char toolButtonAlignment[];
+    static const char alteredBackground[];
+    static const char highlightNeutral[];
+    static const char isTopMenu[];
+    static const char menuSeamlessEdges[];
+    static const char bordersSides[];
+    static const char forceFrame[];
+    static const char statusBarSeparator[];
+    static const char roundButton[];
+    static const char rootStatus[];
+};
+
+}
