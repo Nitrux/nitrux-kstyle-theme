@@ -160,8 +160,10 @@ public:
             painter->setPen(c);
             c.setAlphaF(c.alphaF() * Metrics::Blend_Value);
             painter->setBrush(c);
-            const qreal radius = qMax(0.0, static_cast<qreal>(StyleConfigData::borderRadius()) - (0.5 * PenWidth::Frame));
-            painter->drawRoundedRect(QRectF(option.rect).adjusted(0.5, 0.5, -0.5, -0.5), radius, radius);
+            const QRectF highlightRect = QRectF(option.rect).adjusted(0.5, 0.5, -0.5, -0.5);
+            const qreal configuredRadius = qMax(0.0, static_cast<qreal>(StyleConfigData::borderRadius()) - (0.5 * PenWidth::Frame));
+            const qreal radius = qMin(configuredRadius, qMin(highlightRect.width(), highlightRect.height()) * 0.25);
+            painter->drawRoundedRect(highlightRect, radius, radius);
         }
 
         // and ask the base class to do everything else for us besides the selected/highlighted part which we just did
@@ -234,6 +236,46 @@ ToolButtonMenuArrowStyle toolButtonMenuArrowStyle(const QStyleOption *option)
     }
 
     return ToolButtonMenuArrowStyle::None;
+}
+
+const QList<QPalette::ColorRole> &contrastForegroundRoles()
+{
+    static const QList<QPalette::ColorRole> roles = {
+        QPalette::WindowText,
+        QPalette::Text,
+        QPalette::ButtonText,
+        QPalette::HighlightedText,
+        QPalette::Window,
+        QPalette::Base,
+        QPalette::Button,
+    };
+    return roles;
+}
+
+QColor contrastingPaletteColor(const QPalette &palette, const QColor &background)
+{
+    const auto &roles = contrastForegroundRoles();
+    QColor foreground = palette.color(roles.constFirst());
+    qreal contrast = KColorUtils::contrastRatio(background, foreground);
+    for (const auto role : roles) {
+        const QColor candidate = palette.color(role);
+        const qreal candidateContrast = KColorUtils::contrastRatio(background, candidate);
+        if (candidateContrast > contrast) {
+            foreground = candidate;
+            contrast = candidateContrast;
+        }
+    }
+    return foreground;
+}
+
+void setContrastingPaletteForeground(QPalette &palette, const QColor &background)
+{
+    const QColor foreground = contrastingPaletteColor(palette, background);
+    for (const auto group : {QPalette::Active, QPalette::Inactive}) {
+        for (const auto role : contrastForegroundRoles()) {
+            palette.setColor(group, role, foreground);
+        }
+    }
 }
 
 }
@@ -1134,6 +1176,9 @@ void Style::drawPrimitive(PrimitiveElement element, const QStyleOption *option, 
         break;
     case PE_PanelItemViewItem:
         fcn = &Style::drawPanelItemViewItemPrimitive;
+        break;
+    case PE_PanelLineEdit:
+        fcn = &Style::drawPanelLineEditPrimitive;
         break;
     case PE_IndicatorCheckBox:
         fcn = &Style::drawIndicatorCheckBoxPrimitive;
@@ -3882,6 +3927,12 @@ bool Style::drawFrameLineEditPrimitive(const QStyleOption *option, QPainter *pai
         return true;
     }
 
+    // Line edits and spin boxes use a filled surface without an outline.
+    if (widget && (qobject_cast<const QLineEdit *>(widget) || qobject_cast<const QAbstractSpinBox *>(widget))) {
+        _helper->renderFrame(painter, rect, palette.color(QPalette::Base));
+        return true;
+    }
+
     if (widget) {
         const auto borders = widget->property(PropertyNames::bordersSides);
         if (borders.isValid()) {
@@ -3983,6 +4034,17 @@ bool Style::drawFrameLineEditPrimitive(const QStyleOption *option, QPainter *pai
     }
 
     return true;
+}
+
+//______________________________________________________________
+bool Style::drawPanelLineEditPrimitive(const QStyleOption *option, QPainter *, const QWidget *widget) const
+{
+    const auto frameOption = qstyleoption_cast<const QStyleOptionFrame *>(option);
+    const auto parentComboBox = widget ? qobject_cast<const QComboBox *>(widget->parentWidget()) : nullptr;
+
+    // QComboBox paints the complete editable control. Its frameless child
+    // line edit must stay transparent so that it does not cover that surface.
+    return frameOption && frameOption->lineWidth == 0 && parentComboBox;
 }
 
 //___________________________________________________________________________________
@@ -4454,6 +4516,7 @@ bool Style::drawPanelButtonToolPrimitive(const QStyleOption *option, QPainter *p
     stateProperties["down"] = down;
     stateProperties["checked"] = checked;
     stateProperties["flat"] = flat;
+    stateProperties["toolButton"] = true;
     stateProperties["hasNeutralHighlight"] = hasNeutralHighlight;
     stateProperties["isActiveWindow"] = widget ? widget->isActiveWindow() : true;
 
@@ -4868,6 +4931,7 @@ bool Style::drawIndicatorButtonDropDownPrimitive(const QStyleOption *option, QPa
     stateProperties["down"] = down;
     stateProperties["checked"] = checked;
     stateProperties["flat"] = flat;
+    stateProperties["toolButton"] = true;
     stateProperties["hasNeutralHighlight"] = hasNeutralHighlight;
     stateProperties["isActiveWindow"] = widget ? widget->isActiveWindow() : true;
 
@@ -4897,45 +4961,21 @@ bool Style::drawIndicatorButtonDropDownPrimitive(const QStyleOption *option, QPa
 //___________________________________________________________________________________
 bool Style::drawIndicatorTabClosePrimitive(const QStyleOption *option, QPainter *painter, const QWidget *widget) const
 {
-    // get icon and check
-    QIcon icon(standardIcon(SP_TitleBarCloseButton, option, widget));
-    if (icon.isNull()) {
-        return false;
-    }
+    Q_UNUSED(widget)
 
-    // store state
-    const State &state(option->state);
-    const bool enabled(state & State_Enabled);
-    const bool active(state & State_Raised);
-    const bool sunken(state & State_Sunken);
+    // Tab close buttons always use the color scheme negative color. Draw the
+    // symbol directly so title-bar icon state and caching cannot recolor it.
+    const auto &palette = option->palette;
+    const QColor background = _helper->negativeText(palette);
 
-    // decide icon mode and state
-    QIcon::Mode iconMode;
-    QIcon::State iconState;
-    if (!enabled) {
-        iconMode = QIcon::Disabled;
-        iconState = QIcon::Off;
+    // Pick the scheme color with the strongest contrast against the negative
+    // background instead of assuming WindowText is readable on every scheme.
+    const QColor symbol = NitruxPrivate::contrastingPaletteColor(palette, background);
+    const int indicatorSize = pixelMetric(QStyle::PM_SmallIconSize, option, widget);
+    const QRect indicatorRect = centerRect(option->rect, indicatorSize, indicatorSize);
 
-    } else {
-        if (active) {
-            iconMode = QIcon::Active;
-        } else {
-            iconMode = QIcon::Normal;
-        }
-
-        iconState = sunken ? QIcon::On : QIcon::Off;
-    }
-
-    // icon size
-    const int iconWidth(pixelMetric(QStyle::PM_SmallIconSize, option, widget));
-    const QSize iconSize(iconWidth, iconWidth);
-
-    // get pixmap
-    const qreal dpr = painter->device() ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
-    const QPixmap pixmap(_helper->coloredIcon(icon, option->palette, iconSize, dpr, iconMode, iconState));
-
-    // render
-    drawItemPixmap(painter, option->rect, Qt::AlignCenter, pixmap);
+    _helper->renderDecorationButton(painter, indicatorRect, background, ButtonClose, true);
+    _helper->renderDecorationButton(painter, indicatorRect, symbol, ButtonClose, false);
     return true;
 }
 
@@ -5710,7 +5750,7 @@ bool Style::drawMenuBarItemControl(const QStyleOption *option, QPainter *painter
         const auto textRect = option->fontMetrics.boundingRect(rect, textFlags, menuItemOption->text);
 
         // render text
-        const QPalette::ColorRole role = (useStrongFocus && (sunken || selected)) ? QPalette::HighlightedText : QPalette::WindowText;
+        const QPalette::ColorRole role = (useStrongFocus && sunken) ? QPalette::HighlightedText : QPalette::WindowText;
         drawItemText(painter, textRect, textFlags, palette, enabled, menuItemOption->text, role);
 
         // render outline
@@ -6400,9 +6440,9 @@ bool Style::drawFocusFrame(const QStyleOption *option, QPainter *painter, const 
         return true;
     }
 
-    // Buttons and combo boxes use their filled state colors; they do not
-    // receive a separate focus-ring border.
-    if (targetWidget && (targetWidget->inherits("QComboBox") || targetWidget->inherits("QPushButton")
+    // Borderless inputs and filled controls do not receive a separate focus ring.
+    if (targetWidget && (targetWidget->inherits("QLineEdit") || targetWidget->inherits("QAbstractSpinBox")
+                         || targetWidget->inherits("QComboBox") || targetWidget->inherits("QPushButton")
                          || targetWidget->inherits("QToolButton"))) {
         return true;
     }
@@ -7423,6 +7463,21 @@ bool Style::drawToolButtonComplexControl(const QStyleOptionComplex *option, QPai
         return true;
     }
 
+    // Some applications install QToolButtons in the tab bar close-button slot
+    // without enabling tabsClosable(). Route those through the same semantic
+    // close indicator and skip the regular tool-button frame.
+    const auto tabBar = qobject_cast<const QTabBar *>(widget ? widget->parentWidget() : nullptr);
+    if (tabBar) {
+        const auto closePosition = static_cast<QTabBar::ButtonPosition>(
+            proxy()->styleHint(SH_TabBar_CloseButtonPosition, nullptr, tabBar));
+        for (int index = 0; index < tabBar->count(); ++index) {
+            if (tabBar->tabButton(index, closePosition) == widget) {
+                drawIndicatorTabClosePrimitive(option, painter, widget);
+                return true;
+            }
+        }
+    }
+
     // Use the pressed role only while the filled control is pressed
     const bool activeFocus = option->state & QStyle::State_HasFocus;
     const bool hovered = option->state & QStyle::State_MouseOver;
@@ -7438,6 +7493,16 @@ bool Style::drawToolButtonComplexControl(const QStyleOptionComplex *option, QPai
 
     // copy option and alter palette
     QStyleOptionToolButton copy(*toolButtonOption);
+
+    // Tool-button icons, text and arrows use different foreground roles. When
+    // the button has a highlight fill, make all of those local roles use the
+    // scheme color with the strongest contrast against that fill.
+    const bool pressed = (option->state & QStyle::State_Enabled)
+        && (option->state & (QStyle::State_Sunken | QStyle::State_On));
+    if (pressed) {
+        const QColor background = option->palette.color(QPalette::Active, QPalette::Highlight);
+        NitruxPrivate::setContrastingPaletteForeground(copy.palette, background);
+    }
 
     const auto menuStyle = NitruxPrivate::toolButtonMenuArrowStyle(option);
 
@@ -7624,7 +7689,7 @@ bool Style::drawComboBoxComplexControl(const QStyleOptionComplex *option, QPaint
         auto arrowRect(subControlRect(CC_ComboBox, option, SC_ComboBoxArrow, widget));
 
         // render
-        _helper->renderArrow(painter, arrowRect, arrowColor, ArrowDown);
+        _helper->renderTriangleArrow(painter, arrowRect, arrowColor, ArrowDown);
     }
     return true;
 }
@@ -8089,7 +8154,7 @@ void Style::renderSpinBoxArrow(const SubControl &subControl, const QStyleOptionS
     const auto arrowRect(subControlRect(CC_SpinBox, option, subControl, widget));
 
     // render
-    _helper->renderArrow(painter, arrowRect, color, orientation);
+    _helper->renderTriangleArrow(painter, arrowRect, color, orientation);
 }
 
 //______________________________________________________________________________

@@ -33,6 +33,8 @@ struct Metrics {
     // general
     static constexpr int ArrowSize = 10;
     static constexpr int SmallArrowSize = 5;
+    static constexpr int TriangleArrow_Width = 6;
+    static constexpr int TriangleArrow_Height = 4;
 
     // frames
     static constexpr int Frame_FrameWidth = 2;
@@ -76,6 +78,8 @@ struct Metrics {
     static constexpr int ToolButton_MarginWidth = 6;
     static constexpr int ToolButton_ItemSpacing = 4;
     static constexpr int ToolButton_InlineIndicatorWidth = 12;
+    static constexpr qreal ToolButton_HoverOpacity = 0.50;
+    static constexpr qreal ToolButton_MaximumRadiusRatio = 0.25;
 
     // menu button indicator
     static constexpr int MenuButton_IndicatorWidth = 20;

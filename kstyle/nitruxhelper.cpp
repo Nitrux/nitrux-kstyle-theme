@@ -371,7 +371,8 @@ void Helper::renderFocusRect(QPainter *painter, const QRectF &rect, const QBrush
 
         QRectF copy(strokedRect(rect));
 
-        const qreal radius(frameRadius(PenWidth::Frame));
+        // Keep compact highlights rounded without turning them into capsules.
+        const qreal radius(qMin(frameRadius(PenWidth::Frame), qMin(copy.width(), copy.height()) * 0.25));
         if (!(sides & SideTop)) {
             copy.adjust(0, -radius, 0, 0);
         }
@@ -650,6 +651,7 @@ void Helper::renderButtonFrame(QPainter *painter,
     const bool checked = stateProperties.value("checked");
     const bool flat = stateProperties.value("flat");
     const bool roundButton = stateProperties.value("roundButton");
+    const bool toolButton = stateProperties.value("toolButton");
 
     // Flat controls remain transparent until they become interactive.
     if (flat && !hovered && !down && !checked) {
@@ -663,15 +665,23 @@ void Helper::renderButtonFrame(QPainter *painter,
     if (enabled && (down || checked)) {
         background = highlightColor;
     } else if (enabled && hovered) {
-        background = baseColor.darker(110);
+        if (flat && toolButton) {
+            background = palette.color(group, QPalette::Button);
+            background.setAlphaF(background.alphaF() * Metrics::ToolButton_HoverOpacity);
+        } else {
+            background = baseColor.darker(110);
+        }
     }
 
+    const qreal configuredRadius = frameRadius(PenWidth::Frame);
+    const qreal toolButtonRadius = qMin(configuredRadius,
+                                        qMin(rect.width(), rect.height()) * Metrics::ToolButton_MaximumRadiusRatio);
     const qreal roundRadius = std::max(rect.width(), rect.height()) / 2;
 
     painter->setRenderHint(QPainter::Antialiasing, true);
     painter->setBrush(background);
     painter->setPen(Qt::NoPen);
-    const qreal radius = roundButton ? roundRadius : frameRadius(PenWidth::Frame);
+    const qreal radius = roundButton ? roundRadius : (toolButton ? toolButtonRadius : configuredRadius);
     painter->drawRoundedRect(rect, radius, radius);
 }
 
@@ -1412,6 +1422,32 @@ void Helper::renderArrow(QPainter *painter, const QRectF &rect, const QColor &co
     pen.setJoinStyle(Qt::MiterJoin);
     painter->setPen(pen);
     painter->drawPolyline(arrow);
+    painter->restore();
+}
+
+//______________________________________________________________________________
+void Helper::renderTriangleArrow(QPainter *painter, const QRectF &rect, const QColor &color, ArrowOrientation orientation) const
+{
+    if ((orientation != ArrowUp && orientation != ArrowDown)
+        || rect.width() < Metrics::TriangleArrow_Width || rect.height() < Metrics::TriangleArrow_Height) {
+        return;
+    }
+
+    const QPointF center = rect.center();
+    const qreal halfWidth = Metrics::TriangleArrow_Width * 0.5;
+    const qreal halfHeight = Metrics::TriangleArrow_Height * 0.5;
+    const qreal top = center.y() - halfHeight;
+    const qreal bottom = center.y() + halfHeight;
+
+    const QPolygonF triangle = orientation == ArrowUp
+        ? QPolygonF{{center.x() - halfWidth, bottom}, {center.x(), top}, {center.x() + halfWidth, bottom}}
+        : QPolygonF{{center.x() - halfWidth, top}, {center.x(), bottom}, {center.x() + halfWidth, top}};
+
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setBrush(color);
+    painter->setPen(Qt::NoPen);
+    painter->drawPolygon(triangle);
     painter->restore();
 }
 

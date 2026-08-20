@@ -297,6 +297,7 @@ public:
 
     //* generic arrow
     void renderArrow(QPainter *, const QRectF &, const QColor &, ArrowOrientation) const;
+    void renderTriangleArrow(QPainter *, const QRectF &, const QColor &, ArrowOrientation) const;
 
     //* generic button (for mdi decorations, tabs and dock widgets)
     void renderDecorationButton(QPainter *, const QRectF &, const QColor &, ButtonType, bool inverted) const;
